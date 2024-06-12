@@ -4,12 +4,59 @@ function share($v, $sum): float|int
     return round($v/$sum,2)*100;
 }
 
-function votesCount(array $votesArr, string $vote)
+function IP(){
+    if ($_SERVER['REMOTE_ADDR']="127.0.0.1")
+    return rand(0,255).".".rand(0,255).".".rand(0,255);
+    else return $_SERVER['REMOTE_ADDR'];
+}
+
+/*function arrayIPonly(array $votesArr)
+{
+    $j=1;$u=0;
+    $result=array();
+    for ($i=0; $i < count($votesArr); $i++) {
+        $j++;$u++;
+        if ($j % 3 === 0) {
+        $result[$u] = $votesArr[$i];
+        //echo $result[$u]."<br>";
+            }
+    }
+    $result = array_unique($result);
+
+    return $result;
+}*/
+
+/*function votesCount(array $votesArr, string $vote)
 {
     $count = 0;
     foreach ($votesArr as $str) {
         if (strstr($str,$vote,true)) $count++;
         }
+    return $count;
+}*/
+
+function uniqueIP(array $votesArr, string $IP)
+{
+    $count = 0;
+    foreach ($votesArr as $str) {
+        if (strstr($str,$IP)) $count++;
+        //echo $count." ".$IP."<br>";
+    }
+    if ($count>1) return false;
+    else return true;
+}
+function votesCount(array $votesArr, string $vote)
+{
+    $count = 0;
+    for ($i=0; $i < count($votesArr); $i++) {
+
+        $votesArr2[$i]=$votesArr[$i];
+
+        if (strstr($votesArr[$i],$vote)&&
+            uniqueIP($votesArr2,$votesArr[$i-1])
+        ){
+            $count++;}
+    }
     return $count;
 }
 /*function votesCount(array $votesArr, string $vote)
@@ -27,16 +74,17 @@ function votesCount(array $votesArr, string $vote)
     return $count;
 }*/
 
-function printArray($array){
+function printArray($array)
+{
     foreach($array as $v){
-        echo $v;
+        echo $v."<br>";
     }
 }
 
 $redMessage = '';
 $greenMessage = '';
 
-if (file_exists("votes.txt")){
+if (file_exists("log.txt")){
 if (!empty($_GET)) {
     if (isset($_GET["lang"]))
     {
@@ -60,10 +108,10 @@ if (!empty($_GET)) {
                 break;
         }
 
-
+//$_SERVER['REMOTE_ADDR']
         //сохраняем данные в файл
-        $data = gmdate("Y/m/d H:i:s")." @ ".$_SERVER['REMOTE_ADDR']." @ ".$vote." @ "."\r\n";
-        $file=fopen("votes.txt", "a");
+        $data = gmdate("Y/m/d H:i:s")." @ ".IP()." @ ".$vote." @ "."\r\n";
+        $file=fopen("log.txt", "a");
         fwrite($file, $data);
         fclose($file);
         $greenMessage = 'Выбор выполнен.';
@@ -72,39 +120,42 @@ if (!empty($_GET)) {
         $redMessage = 'Сделайте Ваш выбор!';
     }
 
-
-        //Подсчет голосов из log-файла
-        $voteString = '';
-        if (file_exists("votes.txt")){
-       $voteString = file_get_contents("votes.txt");}
-        else $redMessage = "Can't reach file votes.txt.<br>";
-
-        $votesArr= explode("@", $voteString);
-
-    //printArray($votesArr);
-
-        $cpp=votesCount($votesArr, 'C++');
-        $csharp=votesCount($votesArr,'C#');
-        $javascript=votesCount($votesArr,'JavaScript');
-        $php=votesCount($votesArr,'PHP');
-        $java=votesCount($votesArr,'Java');
-
-        $sum = $cpp + $csharp + $javascript + $php + $java;
-
-        if ($sum > 0){
-            $cpp=share($cpp,$sum);
-            $csharp=share($csharp,$sum);
-            $javascript=share($javascript,$sum);
-            $php=share($php,$sum);
-            $java=share($java,$sum);
-        } else $redMessage = 'Голоса не найдены!';
-
-        //Печать хода голосования из log-файла
-        $votes = file("votes.txt");
-        $votesTab = str_replace(" @ ","</td><td align=center>", $votes);
-        $votesTab = str_replace("<br>","</tr><tr>", $votesTab);
     }
 } else $redMessage = "Can't reach file votes.txt.<br>";
+
+//$cpp=$csharp=$javascript=$php=$java=0;
+
+//Подсчет голосов из log-файла
+$voteString = '';
+if (file_exists("log.txt")){
+    $voteString = file_get_contents("log.txt");}
+else $redMessage = "Can't reach file votes.txt.<br>";
+
+$votesArr= explode("@", $voteString);
+
+//$test=arrayIPonly($votesArr);
+//printArray($votesArr);
+
+$cpp = votesCount($votesArr, 'C++');
+$csharp = votesCount($votesArr,'C#');
+$javascript = votesCount($votesArr,'JavaScript');
+$php = votesCount($votesArr,'PHP');
+$java = votesCount($votesArr,'Java');
+
+$sum = $cpp + $csharp + $javascript + $php + $java;
+
+if ($sum > 0){
+    $cpp = share($cpp,$sum);
+    $csharp = share($csharp,$sum);
+    $javascript = share($javascript,$sum);
+    $php = share($php,$sum);
+    $java = share($java,$sum);
+} else $redMessage = 'Голоса не найдены!';
+
+//Печать хода голосования из log-файла
+$votes = file("log.txt");
+$votesTab = str_replace(" @ ","</td><td align=center>", $votes);
+$votesTab = str_replace("<br>","</tr><tr>", $votesTab);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -145,7 +196,7 @@ if (!empty($_GET)) {
 
 
             <?php
-            if (isset($_GET["lang"]))
+            //if (isset($_GET["lang"]))
                 {
                     echo '<div><form method="post"><table border="1" align="bottom">';
                     echo '<h2 align="center">Итоги голосования</h2>';
