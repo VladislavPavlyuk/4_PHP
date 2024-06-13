@@ -5,7 +5,7 @@ function share($v, $sum): float|int
 }
 
 function IP(){
-    if ($_SERVER['REMOTE_ADDR']="127.0.0.1")
+    if ($_SERVER['REMOTE_ADDR']=="127.0.0.1")
     return rand(0,255).".".rand(0,255).".".rand(0,255);
     else return $_SERVER['REMOTE_ADDR'];
 }
