@@ -66,7 +66,7 @@ function votesCount(array $votesArr, string $vote)
 
         $votesArr2[$i] = $votesArr[$i];
 
-        if (strstr($votesArr[$i],$vote)
+        if (strstr($votesArr[$i],$vote,false)
             && uniqueIP($votesArr2,$votesArr[$i-1])
         ){
             $count++;}
@@ -118,7 +118,7 @@ if (!empty($_GET)) {
                 $vote = 'PHP';
                 break;
             case "java":
-                $vote = 'Java';
+                $vote = 'Jаva ';
                 break;
         }
 
@@ -154,7 +154,7 @@ $cpp = votesCount($votesArr, 'C++');
 $csharp = votesCount($votesArr,'C#');
 $javascript = votesCount($votesArr,'JavaScript');
 $php = votesCount($votesArr,'PHP');
-$java = votesCount($votesArr,'Java');
+$java = votesCount($votesArr,'Jаva');
 
 $sum = $cpp + $csharp + $javascript + $php + $java;
 
