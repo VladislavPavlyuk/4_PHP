@@ -5,9 +5,10 @@ function share($v, $sum): float|int
 }
 
 function IP(){
-    if ($_SERVER['REMOTE_ADDR']=="127.0.0.1")
+    /*if ($_SERVER['REMOTE_ADDR']=="127.0.0.1")
     return rand(0,255).".".rand(0,255).".".rand(0,255);
-    else return $_SERVER['REMOTE_ADDR'];
+    else */
+        return $_SERVER['REMOTE_ADDR'];
 }
 
 /*function arrayIPonly(array $votesArr)
@@ -35,14 +36,27 @@ function IP(){
     return $count;
 }*/
 
+function stringToDateTime($input){
+    return date('Y-m-d H:i:s', strtotime($input));
+}
+
+function currentMinusSixtySeconds(){
+    $datetime = new DateTime(null, new DateTimeZone('UTC'));
+    $datetime->modify('-60 seconds');
+    //echo '-60 seconds'.$datetime->format('Y-m-d H:i:s');
+    return $datetime->format('Y-m-d H:i:s');
+}
 function uniqueIP(array $votesArr, string $IP)
 {
     $count = 0;
-    foreach ($votesArr as $str) {
-        if (strstr($str,$IP)) $count++;
-        //echo $count." ".$IP."<br>";
+    for ($i=0; $i<count($votesArr);$i++) {
+        if (strstr($votesArr[$i],$IP))     //поиск IP
+        {
+            if (stringToDateTime($votesArr[$i-1]) > currentMinusSixtySeconds()) $count++;
+        }
+        //проверка времени 1 минуты назад
     }
-    if ($count>1) return false;
+    if ($count > 1) return false;
     else return true;
 }
 function votesCount(array $votesArr, string $vote)
@@ -50,10 +64,10 @@ function votesCount(array $votesArr, string $vote)
     $count = 0;
     for ($i=0; $i < count($votesArr); $i++) {
 
-        $votesArr2[$i]=$votesArr[$i];
+        $votesArr2[$i] = $votesArr[$i];
 
-        if (strstr($votesArr[$i],$vote)&&
-            uniqueIP($votesArr2,$votesArr[$i-1])
+        if (strstr($votesArr[$i],$vote)
+            && uniqueIP($votesArr2,$votesArr[$i-1])
         ){
             $count++;}
     }
