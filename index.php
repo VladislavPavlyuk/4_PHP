@@ -7,93 +7,95 @@ function share($v, $sum): float|int
 function IP(){
     /*if ($_SERVER['REMOTE_ADDR']=="127.0.0.1")
     return rand(0,255).".".rand(0,255).".".rand(0,255);
-    else */
+    else*/
         return $_SERVER['REMOTE_ADDR'];
 }
 
-/*function arrayIPonly(array $votesArr)
-{
-    $j=1;$u=0;
-    $result=array();
-    for ($i=0; $i < count($votesArr); $i++) {
-        $j++;$u++;
-        if ($j % 3 === 0) {
-        $result[$u] = $votesArr[$i];
-        //echo $result[$u]."<br>";
-            }
+function userIP($IP){
+    //echo $IP."<br>";
+    $name="";
+    $names = array("Anastasia"=>"26.113.31.57",
+        "Igor"=>"26.208.70.215",
+        "IRISKA_PC"=>"26.208.70.215",
+        "Irina Alekseevna"=>"26.27.154.150",
+        "LEVPAVELKO"=>"26.42.27.87",
+        "Nastia"=>"26.1.97.67",
+        "Oleksii Musiyenko"=>"26.198.238.59",
+        "Oleksiy Musiyenko"=>"26.244.69.84",
+        "Pismichenko Igor"=>"26.47.228.119",
+        "Viktoria"=>"26.238.242.38",
+        "Vitaliy"=>"26.190.40.108",
+        "Vladislav"=>"26.230.170.42",
+        "Vladislav S"=>"26.41.169.173",
+        "Vladislav Pavlyuk" =>"26.115.215.169");
+    //reset($names);
+     $name = array_search($IP, $names);
+         if ($name!="") return $name;
+         else
+             return $IP;
+}
+
+function twoDatesCompare($date1, $date2){
+    if (gettype($date1) == "string") {
+        $datetime1 = date_create($date1);
+        //$datetime1 = $datetime1->format('Y-m-d H:i:s');
     }
-    $result = array_unique($result);
+    if (gettype($date2)=="string")
+    {
+        $datetime2=date_create($date2);
+        date_sub($datetime2,date_interval_create_from_date_string("60 seconds"));
+        //$datetime2 = $datetime2->format('Y-m-d H:i:s');
+    }
+    //echo date('Y-m-d H:i:s', strtotime($datetime1))."     ".date('Y-m-d H:i:s', strtotime($datetime2))."<br>";
+    //echo $datetime1->format('Y-m-d H:i:s')." < ".$datetime2->format('Y-m-d H:i:s')."<br>";
 
-    return $result;
-}*/
-
-/*function votesCount(array $votesArr, string $vote)
-{
-    $count = 0;
-    foreach ($votesArr as $str) {
-        if (strstr($str,$vote,true)) $count++;
-        }
-    return $count;
-}*/
-
-function stringToDateTime($input){
-    return date('Y-m-d H:i:s', strtotime($input));
+    if($datetime1 < $datetime2) //если время1 раньше времени2 после отката времени2 на 60 секунд назад, возвращаем true
+        return true;
+    else
+        return false;
 }
 
-function currentMinusSixtySeconds(){
-    $datetime = new DateTime(null, new DateTimeZone('UTC'));
-    $datetime->modify('-60 seconds');
-    //echo '-60 seconds'.$datetime->format('Y-m-d H:i:s');
-    return $datetime->format('Y-m-d H:i:s');
-}
 function uniqueIP(array $votesArr, string $IP)
 {
-    $count = 0;
-    for ($i=0; $i<count($votesArr);$i++) {
-        if (strstr($votesArr[$i],$IP))     //поиск IP
+        $count = 0;
+        for ($i = 0; $i < count($votesArr); $i++)
         {
-            if (stringToDateTime($votesArr[$i-1]) > currentMinusSixtySeconds()) $count++;
+            if (strstr($votesArr[$i][1], $IP))     //если IP найден
+            {
+                for ($j = $i+1; $j < count($votesArr); $j++) // то начиная со следуюего элемента ищем повтор того же IP
+                {
+                    if (strstr($votesArr[$j][1], $IP))     // если второй повтор найден
+                    {
+                        if (twoDatesCompare($votesArr[$i][0], ($votesArr[$j][0])))  $count = 0; //  и разница между повторами положительна
+                        //echo $count."<br>";
+                        else $count++;
+                    }
+                }
+            }
         }
-        //проверка времени 1 минуты назад
-    }
-    if ($count > 1) return false;
-    else return true;
+        if ($count > 0) //если повторов больше 0, IP не уникален
+            return false;
+        else
+            return true;
 }
-function votesCount(array $votesArr, string $vote)
+function votesCount(array $votesArr, string $vote)      //подсчет голосов за каждого кандидата
 {
+    //echo "Вход в votesCount";
     $count = 0;
-    for ($i=0; $i < count($votesArr); $i++) {
+        for ($i = 0; $i < count($votesArr); $i++) {
 
-        $votesArr2[$i] = $votesArr[$i];
+            $votesArr2[$i] = $votesArr[$i];
 
-        if (strstr($votesArr[$i],$vote,false)
-            && uniqueIP($votesArr2,$votesArr[$i-1])
-        ){
-            $count++;}
-    }
-    return $count;
+            if (strstr($votesArr[$i][2], $vote, false) // если кагдидат найден
+                && uniqueIP($votesArr2, $votesArr[$i][1]) // проверяем уникальность IP
+            ) {
+                $count++;   //добавляем голос, если он уникален
+            }
+        }
+
+        return $count;
 }
-/*function votesCount(array $votesArr, string $vote)
-{
-    $counts = array_count_values($votesArr);
-    return $counts[$vote];
-}*/
 
-/*function votesCount(array $votesArr, string $vote)
-{
-    $count=0;
-    foreach ($votesArr as $v) {
-        if ($v == $vote) $count++;
-    }
-    return $count;
-}*/
-
-function printArray($array)
-{
-    foreach($array as $v){
-        echo $v."<br>";
-    }
-}
 
 $redMessage = '';
 $greenMessage = '';
@@ -124,7 +126,7 @@ if (!empty($_GET)) {
 
 //$_SERVER['REMOTE_ADDR']
         //сохраняем данные в файл
-        $data = gmdate("Y/m/d H:i:s")." @ ".IP()." @ ".$vote." @ "."\r\n";
+        $data = gmdate("Y/m/d H:i:s")." @ ".IP()." @ ".$vote."\r\n";
         $file=fopen("log.txt", "a");
         fwrite($file, $data);
         fclose($file);
@@ -137,24 +139,35 @@ if (!empty($_GET)) {
     }
 } else $redMessage = "Can't reach file votes.txt.<br>";
 
-//$cpp=$csharp=$javascript=$php=$java=0;
-
 //Подсчет голосов из log-файла
 $voteString = '';
+
 if (file_exists("log.txt")){
     $voteString = file_get_contents("log.txt");}
 else $redMessage = "Can't reach file votes.txt.<br>";
 
-$votesArr= explode("@", $voteString);
+    $votesArr = explode("\r\n", $voteString);
+    for ($i = $j = 0; $i < count($votesArr); $i++) {
+        $votesArr[$i] = explode("@", $votesArr[$i]);
+    }
+array_pop($votesArr);
+
 
 //$test=arrayIPonly($votesArr);
 //printArray($votesArr);
 
-$cpp = votesCount($votesArr, 'C++');
-$csharp = votesCount($votesArr,'C#');
-$javascript = votesCount($votesArr,'JavaScript');
-$php = votesCount($votesArr,'PHP');
-$java = votesCount($votesArr,'Jаva');
+$cpp = $csharp = $javascript = $php = $java = 0;
+
+if (isset($votesArr[0][2]))     //если массив не пустой, то считаем голоса
+{
+    $greenMessage = "Идет поиск";
+    $cpp = votesCount($votesArr, 'C++');
+    $csharp = votesCount($votesArr, 'C#');
+    $javascript = votesCount($votesArr, 'JavaScript');
+    $php = votesCount($votesArr, 'PHP');
+    $java = votesCount($votesArr, 'Jаva');
+} else $redMessage = "Поиск не работает";
+
 
 $sum = $cpp + $csharp + $javascript + $php + $java;
 
@@ -232,7 +245,7 @@ $votesTab = str_replace("<br>","</tr><tr>", $votesTab);
                             </tr>';
 
                         foreach (array_reverse($votesTab) as $vote)
-                            echo '</tr><td> '.$vote. ' </td><tr>';
+                            echo '</tr><td> '.userIP($vote). ' </td><tr>';
 
                    echo'</table></form></div>';
                 }
